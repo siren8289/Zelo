@@ -28,6 +28,8 @@ import { Checkbox } from "./ui/checkbox";
 import { toast } from "sonner";
 import type { OrganizeResType, PriorityResType } from "@/lib/flow-b/schemas";
 
+type PriorityItem = PriorityResType["items"][number];
+
 type FlowStep = "input" | "categorized" | "prioritized" | "export";
 
 interface Task {
@@ -133,8 +135,10 @@ export function AITasksFlow() {
         return;
       }
       setPriority(data);
-      const priorityByIndex = new Map(data.items.map((p: { item_index: number; priority_score: number; reason: string }) => [p.item_index, p]));
-      const ordered = (data.ordered_indexes as number[]) ?? data.items.map((p: { item_index: number }) => p.item_index);
+      const priorityByIndex = new Map<number, PriorityItem>(
+        (data.items as PriorityItem[]).map((p) => [p.item_index, p])
+      );
+      const ordered = (data.ordered_indexes as number[]) ?? (data.items as PriorityItem[]).map((p) => p.item_index);
       setTasks((prev) =>
         ordered.map((idx: number) => {
           const item = organized.items[idx];
