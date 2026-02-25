@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko">
-      <body className="min-h-screen bg-background">
+    <html lang="ko" suppressHydrationWarning>
+      <body className="min-h-screen bg-background" suppressHydrationWarning>
         <AppToaster />
         <SiteHeader />
         <main className="container mx-auto px-4 py-6">

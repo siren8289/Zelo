@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Lightbulb, CheckSquare, History, User, Menu, X } from "lucide-react";
+import { Home, Lightbulb, FileText, CheckSquare, History, User, Menu, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -8,7 +8,8 @@ import { ThemeToggle } from "@/app/components/ThemeToggle";
 
 const navItems = [
   { path: "/", label: "홈", icon: Home },
-  { path: "/ai-planner", label: "AI 기획 비서", icon: Lightbulb },
+  { path: "/ai-planner", label: "AI 기획서", icon: Lightbulb },
+  { path: "/prd", label: "일반 PRD", icon: FileText },
   { path: "/ai-tasks", label: "AI 업무 매니저", icon: CheckSquare },
   { path: "/history", label: "히스토리", icon: History },
   { path: "/profile", label: "프로필", icon: User },

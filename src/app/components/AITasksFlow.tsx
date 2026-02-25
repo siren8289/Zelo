@@ -1,9 +1,8 @@
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   CheckSquare,
-  Clock,
-  Filter,
   Download,
   TrendingUp,
   Code,
@@ -11,6 +10,14 @@ import {
   Users,
   Mail,
   ChevronRight,
+  FileText,
+  BookOpen,
+  MessageSquare,
+  User,
+  Briefcase,
+  GraduationCap,
+  Copy,
+  Save,
 } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
@@ -19,6 +26,7 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { Checkbox } from "./ui/checkbox";
 import { toast } from "sonner";
+import type { OrganizeResType, PriorityResType } from "@/lib/flow-b/schemas";
 
 type FlowStep = "input" | "categorized" | "prioritized" | "export";
 
@@ -32,89 +40,160 @@ interface Task {
   completed: boolean;
 }
 
-const categoryIcons: Record<string, any> = {
+const categoryIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  업무: Briefcase,
+  학업: GraduationCap,
   개발: Code,
   디자인: Palette,
-  미팅: Users,
-  이메일: Mail,
+  문서: FileText,
+  회의: Users,
+  연락: Mail,
+  개인: User,
+  기타: CheckSquare,
 };
 
 const categoryColors: Record<string, string> = {
+  업무: "bg-chart-1/10 text-chart-1 border-chart-1/20",
+  학업: "bg-chart-2/10 text-chart-2 border-chart-2/20",
   개발: "bg-primary/10 text-primary border-primary/20",
   디자인: "bg-secondary/10 text-secondary-foreground border-secondary/20",
-  미팅: "bg-chart-3/10 text-chart-3 border-chart-3/20",
-  이메일: "bg-chart-4/10 text-chart-4 border-chart-4/20",
+  문서: "bg-chart-3/10 text-chart-3 border-chart-3/20",
+  회의: "bg-chart-4/10 text-chart-4 border-chart-4/20",
+  연락: "bg-chart-5/10 text-chart-5 border-chart-5/20",
+  개인: "bg-muted text-muted-foreground border-border",
+  기타: "bg-muted text-muted-foreground border-border",
 };
 
+function scoreToUrgency(score: number): string {
+  if (score >= 80) return "긴급";
+  if (score >= 50) return "중요";
+  return "보통";
+}
+
 export function AITasksFlow() {
+  const router = useRouter();
   const [step, setStep] = useState<FlowStep>("input");
   const [taskInput, setTaskInput] = useState("");
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [tasks, setTasks] = useState<Task[]>([]);
+  const [organized, setOrganized] = useState<OrganizeResType | null>(null);
+  const [priority, setPriority] = useState<PriorityResType | null>(null);
   const [filterCategory, setFilterCategory] = useState<string | null>(null);
 
-  const handleAnalyze = () => {
+  const handleAnalyze = async () => {
     if (!taskInput.trim()) {
       toast.error("할 일을 입력해주세요");
       return;
     }
-
     setIsProcessing(true);
-
-    setTimeout(() => {
-      const mockTasks: Task[] = [
-        {
-          id: "1",
-          title: "사용자 로그인 API 개발",
-          category: "개발",
-          priority: 95,
-          urgency: "긴급",
-          reason: "프로젝트 핵심 기능이며 다른 작업의 선행 조건",
-          completed: false,
-        },
-        {
-          id: "2",
-          title: "디자인 시스템 컴포넌트 정리",
-          category: "디자인",
-          priority: 75,
-          urgency: "중요",
-          reason: "일관된 UI/UX를 위해 필요하나 긴급하지 않음",
-          completed: false,
-        },
-        {
-          id: "3",
-          title: "팀 주간 회의 준비",
-          category: "미팅",
-          priority: 88,
-          urgency: "긴급",
-          reason: "내일 오전 회의 예정",
-          completed: false,
-        },
-        {
-          id: "4",
-          title: "고객 문의 답변",
-          category: "이메일",
-          priority: 65,
-          urgency: "보통",
-          reason: "24시간 이내 답변 권장",
-          completed: false,
-        },
-      ];
-
-      setTasks(mockTasks);
-      setIsProcessing(false);
+    try {
+      const res = await fetch("/api/flow-b/organize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ raw_input: taskInput.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error ?? "분류 요청 실패");
+        return;
+      }
+      setOrganized(data);
+      const mapped: Task[] = data.items.map((it: { content: string; category: string }, idx: number) => ({
+        id: String(idx),
+        title: it.content,
+        category: it.category,
+        priority: 0,
+        urgency: "보통",
+        reason: "",
+        completed: false,
+      }));
+      setTasks(mapped);
       setStep("categorized");
       toast.success("할 일이 자동으로 정리되었습니다!");
-    }, 1500);
+    } catch {
+      toast.error("네트워크 오류");
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
-  const handlePrioritize = () => {
+  const handlePrioritize = async () => {
+    if (!organized) return;
     setIsProcessing(true);
-    setTimeout(() => {
-      setIsProcessing(false);
+    try {
+      const res = await fetch("/api/flow-b/priority", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ organized }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data?.error ?? "우선순위 계산 실패");
+        return;
+      }
+      setPriority(data);
+      const priorityByIndex = new Map(data.items.map((p: { item_index: number; priority_score: number; reason: string }) => [p.item_index, p]));
+      const ordered = (data.ordered_indexes as number[]) ?? data.items.map((p: { item_index: number }) => p.item_index);
+      setTasks((prev) =>
+        ordered.map((idx: number) => {
+          const item = organized.items[idx];
+          const p = priorityByIndex.get(idx);
+          return {
+            id: String(idx),
+            title: item.content,
+            category: item.category,
+            priority: p?.priority_score ?? 0,
+            urgency: scoreToUrgency(p?.priority_score ?? 0),
+            reason: p?.reason ?? "",
+            completed: prev.find((t) => t.id === String(idx))?.completed ?? false,
+          };
+        })
+      );
       setStep("prioritized");
       toast.success("우선순위가 계산되었습니다!");
-    }, 1000);
+    } catch {
+      toast.error("네트워크 오류");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleSaveToSupabase = async () => {
+    if (!organized || !priority || !taskInput.trim()) return;
+    setIsSaving(true);
+    try {
+      const res = await fetch("/api/flow-b/save", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          raw_input: taskInput.trim(),
+          organized,
+          priority,
+        }),
+      });
+      const data = await res.json();
+      if (res.status === 401) {
+        toast.error("로그인이 필요합니다");
+        router.push("/profile");
+        return;
+      }
+      if (!res.ok) {
+        toast.error(data?.error ?? "저장 실패");
+        return;
+      }
+      toast.success("Supabase에 저장되었습니다");
+    } catch {
+      toast.error("네트워크 오류");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCopyChecklist = () => {
+    const text = tasks.map((t) => `${t.completed ? "[x]" : "[ ]"} ${t.title}`).join("\n");
+    navigator.clipboard.writeText(text);
+    toast.success("체크리스트가 복사되었습니다");
   };
 
   const handleToggleTask = (id: string) => {
@@ -142,7 +221,6 @@ export function AITasksFlow() {
     : tasks;
 
   const sortedTasks = [...filteredTasks].sort((a, b) => b.priority - a.priority);
-  const topTasks = sortedTasks.slice(0, 3);
 
   return (
     <div className="space-y-4">
@@ -183,7 +261,7 @@ export function AITasksFlow() {
               <CheckSquare className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h3> 일을 입력하세요</h3>
+              <h3>할 일을 입력하세요</h3>
               <p className="text-sm text-muted-foreground">
                 줄바꿈으로 구분하여 입력하세요
               </p>
@@ -309,26 +387,29 @@ export function AITasksFlow() {
             </div>
           </Card>
 
-          {/* Top 3 */}
+          {/* 우선순위 순 전체 목록 (모든 작업에 점수·사유 표시) */}
           <div className="space-y-3">
-            <h4 className="px-1">🔥 우선 처리 추천 (Top 3)</h4>
-            {topTasks.map((task, index) => {
+            <h4 className="px-1">우선순위 순 작업 목록 ({sortedTasks.length}건)</h4>
+            {sortedTasks.map((task, index) => {
               const Icon = categoryIcons[task.category] || CheckSquare;
+              const isTop3 = index < 3;
               return (
                 <Card
                   key={task.id}
-                  className="p-4 border-primary/30 bg-primary/5"
+                  className={`p-4 ${isTop3 ? "border-primary/30 bg-primary/5" : ""}`}
                 >
                   <div className="flex items-start gap-3 mb-3">
-                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm">
+                    <div className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm shrink-0">
                       {index + 1}
                     </div>
-                    <div className="flex-1">
+                    <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <Icon className="h-4 w-4" />
-                        <h4>{task.title}</h4>
+                        <Icon className="h-4 w-4 shrink-0" />
+                        <h4 className={task.completed ? "line-through text-muted-foreground" : ""}>
+                          {task.title}
+                        </h4>
                       </div>
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <Badge
                           variant="outline"
                           className={categoryColors[task.category]}
@@ -338,6 +419,11 @@ export function AITasksFlow() {
                         <Badge variant="outline">{task.urgency}</Badge>
                       </div>
                     </div>
+                    <Checkbox
+                      checked={task.completed}
+                      onCheckedChange={() => handleToggleTask(task.id)}
+                      className="shrink-0"
+                    />
                   </div>
 
                   <div className="space-y-2">
@@ -346,49 +432,14 @@ export function AITasksFlow() {
                       <span className="font-semibold">{task.priority}/100</span>
                     </div>
                     <Progress value={task.priority} className="h-2" />
-                    <p className="text-xs text-muted-foreground">{task.reason}</p>
+                    {task.reason ? (
+                      <p className="text-xs text-muted-foreground">{task.reason}</p>
+                    ) : null}
                   </div>
                 </Card>
               );
             })}
           </div>
-
-          {/* All Tasks */}
-          {sortedTasks.length > 3 && (
-            <div className="space-y-3">
-              <h4 className="px-1">나머지 작업</h4>
-              {sortedTasks.slice(3).map((task) => {
-                const Icon = categoryIcons[task.category] || CheckSquare;
-                return (
-                  <Card key={task.id} className="p-4">
-                    <div className="flex items-start gap-3">
-                      <Checkbox
-                        checked={task.completed}
-                        onCheckedChange={() => handleToggleTask(task.id)}
-                      />
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Icon className="h-4 w-4 text-muted-foreground" />
-                          <h4>{task.title}</h4>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Badge
-                            variant="outline"
-                            className={categoryColors[task.category]}
-                          >
-                            {task.category}
-                          </Badge>
-                          <span className="text-xs text-muted-foreground">
-                            점수: {task.priority}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
 
           <div className="grid grid-cols-2 gap-3">
             <Button variant="outline" size="lg" onClick={() => setStep("categorized")}>
@@ -410,6 +461,16 @@ export function AITasksFlow() {
           </Card>
 
           <div className="space-y-3">
+            <Button
+              variant="default"
+              className="w-full justify-start h-auto py-4"
+              onClick={handleSaveToSupabase}
+              disabled={isSaving || !organized || !priority}
+            >
+              <Save className="h-5 w-5 mr-3" />
+              {isSaving ? "저장 중..." : "Supabase에 저장"}
+            </Button>
+
             <Button variant="outline" className="w-full justify-start h-auto py-4">
               <Download className="h-5 w-5 mr-3" />
               Notion으로 보내기
@@ -423,9 +484,9 @@ export function AITasksFlow() {
             <Button
               variant="outline"
               className="w-full justify-start h-auto py-4"
-              onClick={() => toast.success("체크리스트가 복사되었습니다")}
+              onClick={handleCopyChecklist}
             >
-              <Download className="h-5 w-5 mr-3" />
+              <Copy className="h-5 w-5 mr-3" />
               체크리스트 복사
             </Button>
           </div>
@@ -437,6 +498,8 @@ export function AITasksFlow() {
               setStep("input");
               setTaskInput("");
               setTasks([]);
+              setOrganized(null);
+              setPriority(null);
               toast.success("새 할 일을 시작하세요");
             }}
           >

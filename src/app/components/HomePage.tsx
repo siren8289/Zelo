@@ -1,4 +1,4 @@
-import { Lightbulb, CheckSquare, History, User, Sparkles } from "lucide-react";
+import { Lightbulb, CheckSquare, History, User, Sparkles, FileText } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 
@@ -10,17 +10,24 @@ export function HomePage({ onNavigate }: HomePageProps) {
   const actionCards = [
     {
       id: "ai-planner",
-      title: "아이디어 정리하기",
-      description: "AI가 아이디어를 분석하고 기획서로 만들어드립니다",
+      title: "AI PRD 기획서",
+      description: "AI가 아이디어를 분석해 기획서로 만들어드립니다",
       icon: Lightbulb,
       gradient: "from-primary to-secondary",
+    },
+    {
+      id: "prd",
+      title: "일반 PRD 기획서",
+      description: "템플릿에 맞춰 직접 기획서를 작성합니다",
+      icon: FileText,
+      gradient: "from-secondary to-primary",
     },
     {
       id: "ai-tasks",
       title: "할 일 정리하기",
       description: "업무를 자동으로 분류하고 우선순위를 추천합니다",
       icon: CheckSquare,
-      gradient: "from-secondary to-primary",
+      gradient: "from-primary to-secondary",
     },
   ];
 

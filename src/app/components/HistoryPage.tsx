@@ -1,13 +1,13 @@
 "use client";
-import { useState } from "react";
-import { History, FileText, CheckSquare, Trash2, ExternalLink } from "lucide-react";
+import { useState, useEffect } from "react";
+import { History, FileText, CheckSquare, Trash2, ExternalLink, Loader2 } from "lucide-react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { toast } from "sonner";
 
-interface HistoryItem {
+export interface HistoryItem {
   id: string;
   type: "planner" | "tasks";
   title: string;
@@ -20,38 +20,33 @@ interface HistoryPageProps {
 }
 
 export function HistoryPage({ onOpenDetail }: HistoryPageProps) {
-  const [historyItems] = useState<HistoryItem[]>([
-    {
-      id: "1",
-      type: "planner",
-      title: "건강 도시락 구독 서비스",
-      date: "2시간 전",
-      preview: "직장인들을 위한 영양가 있는 식단 제공 서비스",
-    },
-    {
-      id: "2",
-      type: "tasks",
-      title: "개발 작업 정리",
-      date: "5시간 전",
-      preview: "로그인 API, 디자인 시스템, 팀 회의 등 6개 작업",
-    },
-    {
-      id: "3",
-      type: "planner",
-      title: "온라인 교육 플랫폼",
-      date: "1일 전",
-      preview: "실시간 1:1 코칭이 가능한 교육 서비스",
-    },
-    {
-      id: "4",
-      type: "tasks",
-      title: "마케팅 업무",
-      date: "2일 전",
-      preview: "SNS 콘텐츠 제작, 이메일 캠페인 등 4개 작업",
-    },
-  ]);
-
+  const [historyItems, setHistoryItems] = useState<HistoryItem[]>([]);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "planner" | "tasks">("all");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await fetch("/api/flow-b/tasks");
+        if (res.status === 401) {
+          if (!cancelled) setHistoryItems([]);
+          return;
+        }
+        const data = await res.json();
+        if (!res.ok || cancelled) return;
+        setHistoryItems(data.tasks ?? []);
+      } catch {
+        if (!cancelled) setHistoryItems([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const filteredItems =
     filter === "all" ? historyItems : historyItems.filter((item) => item.type === filter);
@@ -94,10 +89,19 @@ export function HistoryPage({ onOpenDetail }: HistoryPageProps) {
         </TabsList>
 
         <TabsContent value={filter} className="space-y-3 mt-4">
-          {filteredItems.length === 0 ? (
+          {loading ? (
+            <Card className="p-8 text-center">
+              <Loader2 className="h-10 w-10 mx-auto mb-3 text-muted-foreground animate-spin" />
+              <p className="text-muted-foreground">불러오는 중...</p>
+            </Card>
+          ) : filteredItems.length === 0 ? (
             <Card className="p-8 text-center">
               <History className="h-12 w-12 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-muted-foreground">저장된 기록이 없습니다</p>
+              <p className="text-muted-foreground">
+                {historyItems.length === 0
+                  ? "저장된 기록이 없습니다. AI 업무 매니저에서 저장하면 여기에 표시됩니다."
+                  : "이 필터에 맞는 기록이 없습니다"}
+              </p>
             </Card>
           ) : (
             filteredItems.map((item) => {
