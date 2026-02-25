@@ -436,7 +436,6 @@ export function AIPlannerFlow() {
             className="w-full h-auto py-3"
             onClick={() => {
               setStep("input");
-              setIdea("");
               setProjectName("");
               setStructuredData({ goal: "", target: "", problem: "", solution: "" });
               setPrdGenerated(null);
