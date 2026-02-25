@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import "@/app/globals.css";
-import { SiteHeader } from "@/app/components/SiteHeader";
-import { AppToaster } from "@/app/components/AppToaster";
+import "./globals.css";
+import { SiteHeader } from "./components/SiteHeader";
+import { AppToaster } from "./components/AppToaster";
 
 export const metadata: Metadata = {
   title: "Create Moodboard Images",
@@ -18,7 +18,7 @@ export default function RootLayout({
       <body className="min-h-screen bg-background" suppressHydrationWarning>
         <AppToaster />
         <SiteHeader />
-        <main className="container mx-auto px-4 py-6">
+        <main className="container mx-auto px-4 py-6" suppressHydrationWarning>
           <div className="max-w-5xl mx-auto">{children}</div>
         </main>
       </body>

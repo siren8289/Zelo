@@ -1,9 +1,9 @@
 {
-  "/api/flow-b/organize/route": "app/api/flow-b/organize/route.js",
-  "/api/flow-planner/generate-prd/route": "app/api/flow-planner/generate-prd/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/ai-tasks/page": "app/ai-tasks/page.js",
   "/prd/page": "app/prd/page.js",
-  "/profile/page": "app/profile/page.js",
   "/ai-planner/page": "app/ai-planner/page.js",
+  "/history/page": "app/history/page.js",
   "/page": "app/page.js",
-  "/ai-tasks/page": "app/ai-tasks/page.js"
+  "/profile/page": "app/profile/page.js"
 }

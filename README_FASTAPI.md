@@ -1,13 +1,13 @@
-## FastAPI backend (app/)
+## FastAPI backend (backend/)
 
-This repository includes a minimal FastAPI backend under `app/` with layered architecture:
+This repository includes a minimal FastAPI backend under `backend/` with layered architecture:
 
-- `app/main.py`: FastAPI entrypoint
-- `app/api/`: routers + deps
-- `app/services/`: business logic
-- `app/tools/`: external-action layer (tool router)
-- `app/middleware/`: request logging + error handling
-- `app/tests/`: minimal pytest suite
+- `backend/main.py`: FastAPI entrypoint
+- `backend/api/`: routers + deps
+- `backend/services/`: business logic
+- `backend/tools/`: external-action layer (tool router)
+- `backend/middleware/`: request logging + error handling
+- `backend/tests/`: minimal pytest suite
 
 ### Run
 
@@ -16,7 +16,7 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-uvicorn app.main:app --reload --port 8000
+uvicorn backend.main:app --reload --port 8000
 ```
 
 ### Endpoints

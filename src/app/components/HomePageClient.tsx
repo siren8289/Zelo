@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { HomePage } from "@/app/components/HomePage";
+import { HomePage } from "./HomePage";
 
 export function HomePageClient() {
   const router = useRouter();
