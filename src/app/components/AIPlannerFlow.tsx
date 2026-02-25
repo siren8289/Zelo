@@ -323,11 +323,11 @@ export function AIPlannerFlow() {
               </div>
               <div>
                 <span className="text-muted-foreground">목표:</span>
-                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.goal ?? structuredData.goal || "—"}</p>
+                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.goal ?? (structuredData.goal || "—")}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">타겟 사용자:</span>
-                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.target ?? structuredData.target || "—"}</p>
+                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.target ?? (structuredData.target || "—")}</p>
               </div>
             </div>
           </Card>
@@ -337,11 +337,11 @@ export function AIPlannerFlow() {
             <div className="space-y-3 text-sm">
               <div>
                 <span className="text-muted-foreground">해결할 문제:</span>
-                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.problem ?? structuredData.problem || "—"}</p>
+                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.problem ?? (structuredData.problem || "—")}</p>
               </div>
               <div>
                 <span className="text-muted-foreground">해결 방안:</span>
-                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.solution ?? structuredData.solution || "—"}</p>
+                <p className="mt-1 whitespace-pre-wrap">{prdGenerated?.solution ?? (structuredData.solution || "—")}</p>
               </div>
             </div>
           </Card>
