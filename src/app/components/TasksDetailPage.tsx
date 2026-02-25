@@ -1,3 +1,5 @@
+"use client";
+
 import {
   ArrowLeft,
   CheckSquare,
@@ -11,7 +13,6 @@ import {
   Clock,
   Filter,
 } from "lucide-react";
-"use client";
 import { useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
